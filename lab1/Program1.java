@@ -27,7 +27,10 @@ public class Program1 extends AbstractProgram1 {
      */
     public boolean isStableMatching(Matching given_matching) {
         /* TODO implement this function */
-	if(given_matching.getTenantMatching().size()==0) return false;
+	//need to repair
+	if(given_matching==null 
+		|| given_matching.getTenantMatching()==null 
+		|| given_matching.getTenantMatching().size()==0) return false;
 	int l = given_matching.getLandlordCount();
 	int n = given_matching.getTenantCount();
 
@@ -79,6 +82,78 @@ public class Program1 extends AbstractProgram1 {
      */
     public Matching stableMatchingGaleShapley(Matching given_matching) {
         /* TODO implement this function */
-        return null; /* TODO remove this line */
+	int l = given_matching.getLandlordCount();
+	int n = given_matching.getTenantCount();
+
+	//Apartments and LandLords correspondence
+	int[] apartBelongTo = new int[n];
+	for(int i=0;i<l;i++){ 
+	    Vector<Integer> curLandlord = given_matching.getLandlordOwners().get(i);
+	    for(int j=0;j<curLandlord.size();j++){
+		apartBelongTo[curLandlord.get(j)]=i;
+	    }
+	}
+
+	boolean[] tenantIsMatched = new boolean[n];
+	boolean[][] tenantAskedApart = new boolean[n][n];
+	int[] apartResidedBy = new int[n];
+	Arrays.fill(apartResidedBy, -1);
+	boolean allMatched = false;
+	while(!allMatched){
+	    //pick current tenant
+	    int curTenant=0;
+	    for(;curTenant<n;curTenant++){
+		if(tenantIsMatched[curTenant]==false){
+		    break;
+		}
+	    }
+	    tenantIsMatched[curTenant]=true;
+
+	    //current tenant ask for an apartment
+	    Vector<Integer> curTenantPref = given_matching.getTenantPref().get(curTenant); 
+	    int curPref=n;
+	    int curApart=0;
+	    for(int i=0;i<n;i++){
+		if(curTenantPref.get(i)<curPref && tenantAskedApart[curTenant][i]==false){
+		    curApart=i;
+		}
+	    }
+	    tenantAskedApart[curTenant][curApart]=true;
+
+	    //compare curTenant with the resided tenant
+	    if(apartResidedBy[curApart]==-1){
+		apartResidedBy[curApart]=curTenant;
+	    }else{
+		int curLandlord = apartBelongTo[curApart];
+		Vector<Integer> curLandlordPref = given_matching.getLandlordPref().get(curLandlord);
+		int residedTenant = apartResidedBy[curApart];
+		if(curLandlordPref.get(curTenant)<curLandlordPref.get(residedTenant)){
+		    apartResidedBy[curApart]=curTenant;
+		    tenantIsMatched[residedTenant]=false;
+		}else{
+		    tenantIsMatched[curTenant]=false;
+		}
+	    }	
+
+	    allMatched=true;
+	    for(boolean x: tenantIsMatched){
+		if(x==false){
+		    allMatched=false;
+		    break;
+		}
+	    }
+	}
+
+	//assign
+	Vector<Integer> tenant_matching = new Vector<Integer>(0);
+	for (int i = 0; i < n; i++) {
+            tenant_matching.add(-1);
+        }
+	for (int i = 0; i < n; i++) {
+            tenant_matching.set(apartResidedBy[i], i);
+        }
+	return new Matching(given_matching, tenant_matching);
+	
+
     }
 }
