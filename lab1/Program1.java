@@ -111,11 +111,12 @@ public class Program1 extends AbstractProgram1 {
 
 	    //current tenant ask for an apartment
 	    Vector<Integer> curTenantPref = given_matching.getTenantPref().get(curTenant); 
-	    int curPref=n;
+	    int curPref=n+1;
 	    int curApart=0;
 	    for(int i=0;i<n;i++){
 		if(curTenantPref.get(i)<curPref && tenantAskedApart[curTenant][i]==false){
 		    curApart=i;
+		    curPref=curTenantPref.get(i);
 		}
 	    }
 	    tenantAskedApart[curTenant][curApart]=true;
